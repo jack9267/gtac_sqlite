@@ -13,6 +13,8 @@
 #include <windows.h>
 #endif
 
+#include <stdio.h>
+#include <string.h>
 #include <GalacticInterfaces.h>
 #include <GalacticStrongPtr.h>
 

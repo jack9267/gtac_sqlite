@@ -24,7 +24,7 @@ public:
 
 	Galactic3D::Result m_Result;
 
-	virtual char const* what() const override
+	virtual char const* what() const throw () override
 	{
 		switch (m_Result)
 		{
@@ -90,7 +90,7 @@ extern void ModuleUnregister();
 
 static CModule* g_pModule;
 
-inline void* _cdecl RegisterModule(void*, Galactic3D::Interfaces::IModuleInterface* pModuleInterface, const char* pszModuleName)
+inline void* RegisterModule(void*, Galactic3D::Interfaces::IModuleInterface* pModuleInterface, const char* pszModuleName)
 {
 	GALACTIC_CALL(pModuleInterface->SetInternalName(pszModuleName));
 
@@ -109,8 +109,8 @@ inline void* _cdecl RegisterModule(void*, Galactic3D::Interfaces::IModuleInterfa
 }
 
 #define MODULE_MAIN(MODULE_NAME) \
-	extern "C" DLL_EXPORT void* _cdecl RegisterModule(void* p, Galactic3D::Interfaces::IModuleInterface* pModuleInterface) { return RegisterModule(p, pModuleInterface, MODULE_NAME); } \
-	extern "C" DLL_EXPORT void _cdecl UnregisterModule(void* pUser) { ModuleUnregister(); delete (CModule*)pUser; }
+	extern "C" DLL_EXPORT void* RegisterModule(void* p, Galactic3D::Interfaces::IModuleInterface* pModuleInterface) { return RegisterModule(p, pModuleInterface, MODULE_NAME); } \
+	extern "C" DLL_EXPORT void UnregisterModule(void* pUser) { ModuleUnregister(); delete (CModule*)pUser; }
 #pragma endregion
 
 namespace SDK
