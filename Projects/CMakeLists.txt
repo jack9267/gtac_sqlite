@@ -1,3 +1,3 @@
 
 add_subdirectory(sqlite)
-add_subdirectory(gtac_sqlite)
+add_subdirectory(mod_sqlite)
