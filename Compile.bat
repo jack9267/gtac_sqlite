@@ -1,13 +1,15 @@
-@if [%2] == [] echo Insufficient parameters! && pause && exit
+@if [%CMAKE_GENERATOR%] == [] echo Insufficient parameters! && pause && exit
 
 mkdir CMake.tmp
 cd CMake.tmp
-mkdir %1
-cd %1
-mkdir %2
-cd %2
+mkdir %CMAKE_GENERATOR%
+cd %CMAKE_GENERATOR%
+mkdir %CMAKE_GENERATOR_PLATFORM%
+cd %CMAKE_GENERATOR_PLATFORM%
+mkdir %CMAKE_GENERATOR_TOOLSET%
+cd %CMAKE_GENERATOR_TOOLSET%
 
-cmake ../../.. -G %1 -T %2 -DCMAKE_INSTALL_PREFIX="../../.." %3
+cmake ../../../.. -G %CMAKE_GENERATOR% -A %CMAKE_GENERATOR_PLATFORM% -T %CMAKE_GENERATOR_TOOLSET% -DCMAKE_INSTALL_PREFIX="../../../.." %1
 if %ERRORLEVEL% neq 0 pause && goto eof
 cmake --build . --config Debug --target install
 if %ERRORLEVEL% neq 0 pause && goto eof
@@ -18,4 +20,4 @@ if %ERRORLEVEL% neq 0 pause && goto eof
 pause
 
 :eof
-cd ../../..
+cd ../../../..
