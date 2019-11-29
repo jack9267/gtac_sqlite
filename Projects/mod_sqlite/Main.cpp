@@ -40,6 +40,12 @@ void CDatabase::Close()
 
 void ModuleRegister()
 {
+	SDK::Define("SQLITE_INTEGER", SQLITE_INTEGER);
+	SDK::Define("SQLITE_FLOAT", SQLITE_FLOAT);
+	SDK::Define("SQLITE_BLOB", SQLITE_BLOB);
+	SDK::Define("SQLITE_NULL", SQLITE_NULL);
+	SDK::Define("SQLITE_TEXT", SQLITE_TEXT);
+
 	g_DatabaseClass = SDK::Class("Database");
 
 	g_DatabaseClass.RegisterConstructor([](Galactic3D::Interfaces::INativeState* pState, int32_t argc, void* pUser) {
