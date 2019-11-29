@@ -52,8 +52,8 @@ else()
 	set(ENGINE_PLATFORM "x86")
 endif()
 
-# on Windows append the bits
-if(WIN32)
+# on Windows append the bits (if 64-bit only)
+if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set(RUNTIME_DEBUG_POSTFIX "_d_${ENGINE_PLATFORM}")
 	set(RUNTIME_RELEASE_POSTFIX "_${ENGINE_PLATFORM}")
 endif()
