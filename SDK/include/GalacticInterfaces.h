@@ -16,7 +16,7 @@ namespace Galactic3D
 	{
 		// The current api version.
 		const uint32_t APIMajorVersion = 1;
-		const uint32_t APIMinorVersion = 0;
+		const uint32_t APIMinorVersion = 1;
 
 		/* {f854dda8-fd5a-4638-b391-71fd58e58d57} */
 		const tUUID ID_ModuleInterface = DefineUUID(0xf854dda8, 0xfd5a, 0x4638, 0xb3, 0x91, 0x71, 0xfd, 0x58, 0xe5, 0x8d, 0x57);
@@ -60,11 +60,15 @@ namespace Galactic3D
 		/* {4ac30720-6d9f-4dfd-bc80-6d6a023dd0d1} */
 		const tUUID ID_ArgumentFactory = DefineUUID(0x4ac30720, 0x6d9f, 0x4dfd, 0xbc, 0x80, 0x6d, 0x6a, 0x02, 0x3d, 0xd0, 0xd1);
 
+		/* {0562748a-7392-4489-b2f5-1060327fa2c8} */
+		const tUUID ID_DefineHandlers = DefineUUID(0x0562748a, 0x7392, 0x4489, 0xb2, 0xf5, 0x10, 0x60, 0x32, 0x7f, 0xa2, 0xc8);
+
 		class IBaseObject;
 		class IReflectedClass;
 		class INativeState;
 		class IFunction;
 		class IStream;
+		class IDefineHandlers;
 
 		typedef void(*IDestructorProc)(IBaseObject* pObject, void* pUser);
 		typedef bool(*IScriptFunctionCallback) (INativeState* pState, int32_t argc, void* pUser);
@@ -218,6 +222,7 @@ namespace Galactic3D
 		public:
 			virtual Result GetGlobal(IReflectedNamespace** ppNamespace) = 0;
 			virtual Result CollectGarbage() = 0;
+			virtual Result GetDefineHandlers(IDefineHandlers** ppDefineHandlers) = 0;
 		};
 
 		class GALACTIC_NOVTABLE IStream : public IUnknown
@@ -255,6 +260,23 @@ namespace Galactic3D
 			virtual Result CreateFunction(IArgument** ppArgument, IScripting* pScripting, IScriptFunctionCallback Callback, void* pUser = nullptr) = 0;
 		};
 
+		class GALACTIC_NOVTABLE IDefineHandlers : public IUnknown
+		{
+		public:
+			virtual Result DefineSigned(const char* pszName, int32_t Value) = 0;
+			virtual Result DefineUnsigned(const char* pszName, uint32_t Value) = 0;
+		};
+
+		enum class LogPriority : uint32_t
+		{
+			Verbose = 1,
+			Debug,
+			Info,
+			Warn,
+			Error,
+			Critical,
+		};
+
 		class GALACTIC_NOVTABLE IModuleInterface : public IUnknown
 		{
 		public:
@@ -263,6 +285,9 @@ namespace Galactic3D
 			virtual Result GetScripting(IScripting** ppScripting) = 0;
 			virtual Result GetNamespace(IReflectedNamespace** ppNamespace) = 0;
 			virtual Result SetInternalName(const char* pszName) = 0;
+			virtual Result Log(uint32_t Priority, const char* psz) = 0;
+			virtual void SetError(const char* psz) = 0; // Thread local
+			virtual const char* GetError() = 0; // Thread local
 		};
 	}
 }

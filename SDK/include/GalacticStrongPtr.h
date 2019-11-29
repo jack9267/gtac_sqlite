@@ -106,7 +106,6 @@ namespace Galactic3D
 		{
 			if (m_pRef != nullptr)
 			{
-				m_pRef->AddRef();
 				return Strong<Y>(static_cast<Y*>(m_pRef));
 			}
 			return Strong<Y>();
