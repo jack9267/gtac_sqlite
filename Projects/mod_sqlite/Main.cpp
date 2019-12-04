@@ -81,6 +81,55 @@ void ModuleRegister()
 		SDK_ENDTRY;
 	});
 
+	g_DatabaseClass.RegisterFunction("backup", [](Galactic3D::Interfaces::INativeState* pState, int32_t argc, void* pUser) {
+		SDK_TRY;
+
+		SDK::State State(pState);
+
+		auto pThis = State.CheckThis<CDatabase, g_DatabaseClass>();
+
+		const char* pszFilename = State.CheckString(0);
+
+		sqlite3* pDstDB;
+		if (sqlite3_open(pszFilename, &pDstDB) != SQLITE_OK) {
+			pState->SetError("%s", sqlite3_errmsg(pDstDB));
+
+			sqlite3_close(pDstDB);
+
+			return false;
+		}
+
+		sqlite3_backup* backupDB = sqlite3_backup_init(pDstDB, "main", pThis->m_pDatabase, "main");
+		if (backupDB == nullptr) {
+			pState->SetError("%s", sqlite3_errmsg(pDstDB));
+
+			sqlite3_close(pDstDB);
+
+			return false;
+		}
+
+		int rc = 0;
+		do
+		{
+			rc = sqlite3_backup_step(backupDB, -1);
+			if (rc == SQLITE_BUSY || rc == SQLITE_LOCKED)
+				sqlite3_sleep(250);
+		} while (rc == SQLITE_OK || rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
+
+		sqlite3_backup_finish(backupDB);
+
+		rc = sqlite3_backup_step(backupDB, -1);
+
+		sqlite3_close(pDstDB);
+
+		if (rc != SQLITE_DONE)
+			pState->SetError("%s", sqlite3_errmsg(pDstDB));
+
+		return true;
+
+		SDK_ENDTRY;
+	});
+
 	g_DatabaseClass.RegisterFunction("query", [](Galactic3D::Interfaces::INativeState* pState, int32_t argc, void* pUser) {
 		SDK_TRY;
 
