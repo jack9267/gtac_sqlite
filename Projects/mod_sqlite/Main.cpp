@@ -145,77 +145,79 @@ void ModuleRegister()
 		sqlite3_stmt* pQuery = NULL;
 
 		const char* pszTail = NULL;
-		int i = sqlite3_prepare_v3(pThis->m_pDatabase, (char*)pszQuery, -1, 0, &pQuery, &pszTail);
+		int preparedStatementResult = sqlite3_prepare_v3(pThis->m_pDatabase, (char*)pszQuery, -1, 0, &pQuery, &pszTail);
 
-		if (i == SQLITE_OK)
+		if (preparedStatementResult != SQLITE_OK)
 		{
-			i = sqlite3_step(pQuery);
+			pState->SetError("%s", sqlite3_errmsg(pThis->m_pDatabase));
 
-			if (i != SQLITE_OK && i != SQLITE_DONE && i != SQLITE_ROW)
-			{
-				pState->SetError("%s", sqlite3_errmsg(pThis->m_pDatabase));
+			// Query failed
+			sqlite3_finalize(pQuery);
 
-				// Query failed
-				sqlite3_finalize(pQuery);
-
-				return false;
-			}
-
-			if (i == SQLITE_OK)
-			{
-				// Done query that does not return anything
-				sqlite3_finalize(pQuery);
-
-				SDK::NullValue Result;
-				State.Return(Result);
-
-				return true;
-			}
+			return false;
 		}
-		else
+		else // SQLITE_OK
 		{
-			return pState->SetError("%s", sqlite3_errmsg(pThis->m_pDatabase));
-		}
+			SDK::ArrayValue Result;
 
-		int Count = sqlite3_column_count(pQuery);
-
-		SDK::ArrayValue Result;
-		for (int i = 0; i < Count; i++)
-		{
-			switch (sqlite3_column_type(pQuery, i))
+			int stepResult;
+			while ((stepResult = sqlite3_step(pQuery)) != SQLITE_DONE)
 			{
-				case SQLITE_INTEGER:
+				if (stepResult != SQLITE_ROW)
+				{
+					pState->SetError("%s", sqlite3_errmsg(pThis->m_pDatabase));
+
+					// Query failed
+					sqlite3_finalize(pQuery);
+
+					return false;
+				}
+				else // SQLITE_ROW
+				{
+					int Count = sqlite3_column_count(pQuery);
+
+					SDK::ArrayValue rowResult;
+					for (int i = 0; i < Count; i++)
 					{
-						SDK::NumberValue Value(sqlite3_column_int(pQuery, i));
-						Result.Insert(Value);
+						switch (sqlite3_column_type(pQuery, i))
+						{
+						case SQLITE_INTEGER:
+						{
+							SDK::NumberValue Value(sqlite3_column_int(pQuery, i));
+							rowResult.Insert(Value);
+						}
+						break;
+						case SQLITE_FLOAT:
+						{
+							SDK::NumberValue Value(sqlite3_column_double(pQuery, i));
+							rowResult.Insert(Value);
+						}
+						break;
+						case SQLITE_TEXT:
+						{
+							SDK::StringValue Value((const char*)sqlite3_column_text(pQuery, i));
+							rowResult.Insert(Value);
+						}
+						break;
+						default:
+						{
+							SDK::NullValue Value;
+							rowResult.Insert(Value);
+						}
+						break;
+						}
 					}
-					break;
-				case SQLITE_FLOAT:
-					{
-						SDK::NumberValue Value(sqlite3_column_double(pQuery, i));
-						Result.Insert(Value);
-					}
-					break;
-				case SQLITE_TEXT:
-					{
-						SDK::StringValue Value((const char*)sqlite3_column_text(pQuery, i));
-						Result.Insert(Value);
-					}
-					break;
-				default:
-					{
-						SDK::NullValue Value;
-						Result.Insert(Value);
-					}
-					break;
-			}
+					Result.Insert(rowResult);
+				}
+			} 
+			//SQLITE_DONE reached
+
+			sqlite3_finalize(pQuery);
+
+			State.Return(Result);
+
+			return true;
 		}
-
-		sqlite3_finalize(pQuery);
-
-		State.Return(Result);
-
-		return true;
 
 		SDK_ENDTRY;
 	});
